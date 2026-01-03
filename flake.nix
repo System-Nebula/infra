@@ -1,5 +1,5 @@
 {
-  description = "Dev shell with Go and OpenTofu";
+  description = "Dev shell with Go and Pulumi";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -27,8 +27,7 @@
           hooks = {
             convco.enable = true;
             statix.enable = true;
-            terraform-format.enable = true;
-            terraform-validate.enable = true;
+            gofmt.enable = true;
           };
         };
       });
@@ -37,12 +36,16 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
+          inherit (self.checks.${system}.pre-commit-check) shellHook enabledPackages;
         in
         {
           default = pkgs.mkShell {
+            inherit shellHook;
+            buildInputs = enabledPackages;
             packages = [
               pkgs.go
-              pkgs.opentofu
+              pkgs.pulumictl
+              pkgs.pulumi
               pkgs.oci-cli
             ];
           };
