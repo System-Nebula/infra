@@ -3,10 +3,15 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    git-hooks.url = "github:cachix/git-hooks.nix";
   };
 
   outputs =
-    { self, nixpkgs }:
+    {
+      self,
+      nixpkgs,
+      ...
+    }@inputs:
     let
       systems = [
         "x86_64-linux"
@@ -16,6 +21,18 @@
       forAllSystems = nixpkgs.lib.genAttrs systems;
     in
     {
+      checks = forAllSystems (system: {
+        pre-commit-check = inputs.git-hooks.lib.${system}.run {
+          src = ./.;
+          hooks = {
+            convco.enable = true;
+            statix.enable = true;
+            terraform-format.enable = true;
+            terraform-validate.enable = true;
+          };
+        };
+      });
+
       devShells = forAllSystems (
         system:
         let
@@ -26,6 +43,7 @@
             packages = [
               pkgs.go
               pkgs.opentofu
+              pkgs.oci-cli
             ];
           };
         }
