@@ -6,6 +6,7 @@ require (
 	github.com/pulumi/pulumi-oci/sdk v1.41.0
 	github.com/pulumi/pulumi-oci/sdk/v3 v3.13.0
 	github.com/pulumi/pulumi/sdk/v3 v3.214.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -86,6 +87,5 @@ require (
 	google.golang.org/grpc v1.71.1 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/frand v1.4.2 // indirect
 )
