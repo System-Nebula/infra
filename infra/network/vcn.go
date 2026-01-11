@@ -4,6 +4,8 @@ package network
 import (
 	"github.com/pulumi/pulumi-oci/sdk/v3/go/oci/core"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"gopkg.in/yaml.v3"
+	"os"
 )
 
 // NetCfg Struct contains all the needed fields to setup a VCN using pulumi
@@ -22,4 +24,13 @@ func (n *NetCfg) CreateVCN(ctx *pulumi.Context, name string) (*core.Vcn, error) 
 		DisplayName:   pulumi.String(n.DisplayName),
 	})
 
+}
+
+// LoadFromYaml reads a YAML file and populates the NetCfg struct
+func (n *NetCfg) LoadFromYaml(path string) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	return yaml.Unmarshal(data, n)
 }
