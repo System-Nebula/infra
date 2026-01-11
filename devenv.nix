@@ -65,17 +65,29 @@
     convco.enable = true;
 
     # Go tools - configure to run only in infra directory
-    gotest = {
+    infra-gotest = {
       enable = true;
+      name = "Go tests (infra)";
+      entry = "cd infra && go test -v ./...";
       files = "^infra/.*\\.go$";
+      language = "system";
+      pass_filenames = false;
     };
-    golangci-lint = {
+    infra-golangci-lint = {
       enable = true;
+      name = "golangci-lint (infra)";
+      entry = "cd infra && golangci-lint run";
       files = "^infra/.*\\.go$";
+      language = "system";
+      pass_filenames = false;
     };
-    gofmt = {
+    infra-gofmt = {
       enable = true;
+      name = "gofmt (infra)";
+      entry = "cd infra && gofmt -l -w .";
       files = "^infra/.*\\.go$";
+      language = "system";
+      pass_filenames = false;
     };
 
     # YAML tools
