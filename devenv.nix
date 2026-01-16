@@ -49,9 +49,18 @@
       description = "Prints this message";
       exec = ''
         echo 
-        echo Helper scripts
-        echo
-        ${pkgs.gnused}/bin/sed -e 's| |••|g' -e 's|=| |' <<EOF | ${pkgs.util-linuxMinimal}/bin/column -t | ${pkgs.gnused}/bin/sed -e 's|^|🦾 |' -e 's|••| |g'
+        cat << EOF
+        ##############################################
+            .___          .__           .__           
+          __| _/_______  _|  |__   ____ |  | ______   
+         / __ |/ __ \  \/ /  |  \_/ __ \|  | \____ \  
+        / /_/ \  ___/\   /|   Y  \  ___/|  |_|  |_> > 
+        \____ |\___  >\_/ |___|  /\___  >____/   __/  
+             \/    \/          \/     \/     |__|
+        ##############################################
+
+        EOF
+        ${pkgs.gnused}/bin/sed -e 's| |••|g' -e 's|=| |' <<EOF | ${pkgs.util-linuxMinimal}/bin/column -t | ${pkgs.gnused}/bin/sed -e 's|^|* |' -e 's|••| |g'
         ${lib.generators.toKeyValue { } (lib.mapAttrs (name: value: value.description) config.scripts)}
         EOF
         echo
