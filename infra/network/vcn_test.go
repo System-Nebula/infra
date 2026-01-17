@@ -1,20 +1,11 @@
 package network
 
 import (
-	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"testing"
 )
 
 type mocks int
-
-func (mocks) NewResource(args pulumi.MockResourceArgs) (string, resource.PropertyMap, error) {
-	return args.Name + "_id", args.Inputs, nil
-}
-
-func (mocks) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error) {
-	return args.Args, nil
-}
 
 func TestCreateVCN(t *testing.T) {
 	tests := []struct {
@@ -29,6 +20,38 @@ func TestCreateVCN(t *testing.T) {
 				CompartmentID: "compartment-123",
 				CidrBlock:     "10.0.0.0/16",
 				DisplayName:   "test-vcn",
+				Subnets: []struct {
+					Name      string `yaml:"name"`
+					CidrBlock string `yaml:"cidr_block"`
+				}{
+					{Name: "subnet1", CidrBlock: "10.0.1.0/24"},
+				},
+				SecurityLists: []struct {
+					Type        string `yaml:"type"`
+					Protocol    string `yaml:"protocol"`
+					Description string `yaml:"description"`
+					Destination string `yaml:"destination"`
+					Source      string `yaml:"source"`
+					Stateless   bool   `yaml:"stateless"`
+					TCPOptions  []struct {
+						MinPort int `yaml:"min_port"`
+						MaxPort int `yaml:"max_port"`
+					} `yaml:"tcp_options"`
+				}{
+					{
+						Type:        "ingress",
+						Protocol:    "tcp",
+						Description: "Allow SSH",
+						Source:      "0.0.0.0/0",
+						Stateless:   false,
+						TCPOptions: []struct {
+							MinPort int `yaml:"min_port"`
+							MaxPort int `yaml:"max_port"`
+						}{
+							{MinPort: 22, MaxPort: 22},
+						},
+					},
+				},
 			},
 			vcnName:       "my-vcn",
 			expectedError: false,
@@ -39,6 +62,22 @@ func TestCreateVCN(t *testing.T) {
 				CompartmentID: "compartment-456",
 				CidrBlock:     "192.168.0.0/24",
 				DisplayName:   "another-vcn",
+				Subnets: []struct {
+					Name      string `yaml:"name"`
+					CidrBlock string `yaml:"cidr_block"`
+				}{},
+				SecurityLists: []struct {
+					Type        string `yaml:"type"`
+					Protocol    string `yaml:"protocol"`
+					Description string `yaml:"description"`
+					Destination string `yaml:"destination"`
+					Source      string `yaml:"source"`
+					Stateless   bool   `yaml:"stateless"`
+					TCPOptions  []struct {
+						MinPort int `yaml:"min_port"`
+						MaxPort int `yaml:"max_port"`
+					} `yaml:"tcp_options"`
+				}{},
 			},
 			vcnName:       "another-vcn",
 			expectedError: false,

@@ -10,13 +10,25 @@ import (
 
 // NetCfg Struct contains all the needed fields to setup a VCN using pulumi
 type NetCfg struct {
-	CompartmentID string
-	CidrBlock     string
-	DisplayName   string
+	CompartmentID string `yaml:"compartment_id"`
+	CidrBlock     string `yaml:"cidr_block"`
+	DisplayName   string `yaml:"display_name"`
 	Subnets       []struct {
-		Name      string
-		CidrBlock string
-	}
+		Name      string `yaml:"name"`
+		CidrBlock string `yaml:"cidr_block"`
+	} `yaml:"subnets"`
+	SecurityLists []struct {
+		Type        string `yaml:"type"`
+		Protocol    string `yaml:"protocol"`
+		Description string `yaml:"description"`
+		Destination string `yaml:"destination"`
+		Source      string `yaml:"source"`
+		Stateless   bool   `yaml:"stateless"`
+		TCPOptions  []struct {
+			MinPort int `yaml:"min_port"`
+			MaxPort int `yaml:"max_port"`
+		} `yaml:"tcp_options"`
+	} `yaml:"security_lists"`
 }
 
 // CreateVCN creates a vcn within oci

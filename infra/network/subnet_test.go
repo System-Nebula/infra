@@ -1,9 +1,18 @@
 package network
 
 import (
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"testing"
 )
+
+func (mocks) NewResource(args pulumi.MockResourceArgs) (string, resource.PropertyMap, error) {
+	return args.Name + "_id", args.Inputs, nil
+}
+
+func (mocks) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error) {
+	return args.Args, nil
+}
 
 func TestCreateSubnet(t *testing.T) {
 	tests := []struct {
@@ -20,14 +29,26 @@ func TestCreateSubnet(t *testing.T) {
 				CidrBlock:     "10.0.0.0/16",
 				DisplayName:   "test-vcn",
 				Subnets: []struct {
-					Name      string
-					CidrBlock string
+					Name      string `yaml:"name"`
+					CidrBlock string `yaml:"cidr_block"`
 				}{
 					{
 						Name:      "my-subnet",
 						CidrBlock: "10.0.1.0/24",
 					},
 				},
+				SecurityLists: []struct {
+					Type        string `yaml:"type"`
+					Protocol    string `yaml:"protocol"`
+					Description string `yaml:"description"`
+					Destination string `yaml:"destination"`
+					Source      string `yaml:"source"`
+					Stateless   bool   `yaml:"stateless"`
+					TCPOptions  []struct {
+						MinPort int `yaml:"min_port"`
+						MaxPort int `yaml:"max_port"`
+					} `yaml:"tcp_options"`
+				}{},
 			},
 			subnetIndex:   0,
 			vcnID:         "vcn-123",
@@ -40,14 +61,26 @@ func TestCreateSubnet(t *testing.T) {
 				CidrBlock:     "192.168.0.0/16",
 				DisplayName:   "another-vcn",
 				Subnets: []struct {
-					Name      string
-					CidrBlock string
+					Name      string `yaml:"name"`
+					CidrBlock string `yaml:"cidr_block"`
 				}{
 					{
 						Name:      "another-subnet",
 						CidrBlock: "192.168.1.0/24",
 					},
 				},
+				SecurityLists: []struct {
+					Type        string `yaml:"type"`
+					Protocol    string `yaml:"protocol"`
+					Description string `yaml:"description"`
+					Destination string `yaml:"destination"`
+					Source      string `yaml:"source"`
+					Stateless   bool   `yaml:"stateless"`
+					TCPOptions  []struct {
+						MinPort int `yaml:"min_port"`
+						MaxPort int `yaml:"max_port"`
+					} `yaml:"tcp_options"`
+				}{},
 			},
 			subnetIndex:   0,
 			vcnID:         "vcn-456",
@@ -60,8 +93,8 @@ func TestCreateSubnet(t *testing.T) {
 				CidrBlock:     "172.16.0.0/16",
 				DisplayName:   "multi-subnet-vcn",
 				Subnets: []struct {
-					Name      string
-					CidrBlock string
+					Name      string `yaml:"name"`
+					CidrBlock string `yaml:"cidr_block"`
 				}{
 					{
 						Name:      "first-subnet",
@@ -72,6 +105,18 @@ func TestCreateSubnet(t *testing.T) {
 						CidrBlock: "172.16.2.0/24",
 					},
 				},
+				SecurityLists: []struct {
+					Type        string `yaml:"type"`
+					Protocol    string `yaml:"protocol"`
+					Description string `yaml:"description"`
+					Destination string `yaml:"destination"`
+					Source      string `yaml:"source"`
+					Stateless   bool   `yaml:"stateless"`
+					TCPOptions  []struct {
+						MinPort int `yaml:"min_port"`
+						MaxPort int `yaml:"max_port"`
+					} `yaml:"tcp_options"`
+				}{},
 			},
 			subnetIndex:   1,
 			vcnID:         "vcn-789",
@@ -110,8 +155,20 @@ func TestCreateSubnetWithEmptyConfig(t *testing.T) {
 		CidrBlock:     "",
 		DisplayName:   "",
 		Subnets: []struct {
-			Name      string
-			CidrBlock string
+			Name      string `yaml:"name"`
+			CidrBlock string `yaml:"cidr_block"`
+		}{},
+		SecurityLists: []struct {
+			Type        string `yaml:"type"`
+			Protocol    string `yaml:"protocol"`
+			Description string `yaml:"description"`
+			Destination string `yaml:"destination"`
+			Source      string `yaml:"source"`
+			Stateless   bool   `yaml:"stateless"`
+			TCPOptions  []struct {
+				MinPort int `yaml:"min_port"`
+				MaxPort int `yaml:"max_port"`
+			} `yaml:"tcp_options"`
 		}{},
 	}
 
@@ -137,14 +194,26 @@ func TestCreateSubnetWithInvalidIndex(t *testing.T) {
 		CidrBlock:     "10.0.0.0/16",
 		DisplayName:   "test-vcn",
 		Subnets: []struct {
-			Name      string
-			CidrBlock string
+			Name      string `yaml:"name"`
+			CidrBlock string `yaml:"cidr_block"`
 		}{
 			{
 				Name:      "test-subnet",
 				CidrBlock: "10.0.1.0/24",
 			},
 		},
+		SecurityLists: []struct {
+			Type        string `yaml:"type"`
+			Protocol    string `yaml:"protocol"`
+			Description string `yaml:"description"`
+			Destination string `yaml:"destination"`
+			Source      string `yaml:"source"`
+			Stateless   bool   `yaml:"stateless"`
+			TCPOptions  []struct {
+				MinPort int `yaml:"min_port"`
+				MaxPort int `yaml:"max_port"`
+			} `yaml:"tcp_options"`
+		}{},
 	}
 
 	tests := []struct {
@@ -182,8 +251,8 @@ func TestCreateAllSubnets(t *testing.T) {
 		CidrBlock:     "10.0.0.0/16",
 		DisplayName:   "test-vcn",
 		Subnets: []struct {
-			Name      string
-			CidrBlock string
+			Name      string `yaml:"name"`
+			CidrBlock string `yaml:"cidr_block"`
 		}{
 			{
 				Name:      "subnet-1",
@@ -198,6 +267,18 @@ func TestCreateAllSubnets(t *testing.T) {
 				CidrBlock: "10.0.3.0/24",
 			},
 		},
+		SecurityLists: []struct {
+			Type        string `yaml:"type"`
+			Protocol    string `yaml:"protocol"`
+			Description string `yaml:"description"`
+			Destination string `yaml:"destination"`
+			Source      string `yaml:"source"`
+			Stateless   bool   `yaml:"stateless"`
+			TCPOptions  []struct {
+				MinPort int `yaml:"min_port"`
+				MaxPort int `yaml:"max_port"`
+			} `yaml:"tcp_options"`
+		}{},
 	}
 
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
@@ -230,8 +311,20 @@ func TestCreateAllSubnetsWithEmptySlice(t *testing.T) {
 		CidrBlock:     "10.0.0.0/16",
 		DisplayName:   "test-vcn",
 		Subnets: []struct {
-			Name      string
-			CidrBlock string
+			Name      string `yaml:"name"`
+			CidrBlock string `yaml:"cidr_block"`
+		}{},
+		SecurityLists: []struct {
+			Type        string `yaml:"type"`
+			Protocol    string `yaml:"protocol"`
+			Description string `yaml:"description"`
+			Destination string `yaml:"destination"`
+			Source      string `yaml:"source"`
+			Stateless   bool   `yaml:"stateless"`
+			TCPOptions  []struct {
+				MinPort int `yaml:"min_port"`
+				MaxPort int `yaml:"max_port"`
+			} `yaml:"tcp_options"`
 		}{},
 	}
 
