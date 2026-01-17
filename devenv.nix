@@ -104,7 +104,10 @@
     };
 
     # YAML tools
-    yamllint.enable = true;
+    yamllint = {
+      enable = true;
+      files = "^(?:(?!\\.github/).)*\\.ya?ml$";
+    };
   };
 
   enterShell = ''
