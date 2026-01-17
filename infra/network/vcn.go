@@ -18,7 +18,7 @@ type NetCfg struct {
 		CidrBlock string `yaml:"cidr_block"`
 	} `yaml:"subnets"`
 	SecurityLists []struct {
-		Type        string `yaml:"type"`
+		DisplayName string `yaml:"display_name"`
 		Protocol    string `yaml:"protocol"`
 		Description string `yaml:"description"`
 		Destination string `yaml:"destination"`

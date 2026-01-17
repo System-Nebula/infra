@@ -6,11 +6,13 @@ import (
 	"testing"
 )
 
-func (mocks) NewResource(args pulumi.MockResourceArgs) (string, resource.PropertyMap, error) {
+type SubnetMocks int
+
+func (SubnetMocks) NewResource(args pulumi.MockResourceArgs) (string, resource.PropertyMap, error) {
 	return args.Name + "_id", args.Inputs, nil
 }
 
-func (mocks) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error) {
+func (SubnetMocks) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error) {
 	return args.Args, nil
 }
 
@@ -38,7 +40,7 @@ func TestCreateSubnet(t *testing.T) {
 					},
 				},
 				SecurityLists: []struct {
-					Type        string `yaml:"type"`
+					DisplayName string `yaml:"display_name"`
 					Protocol    string `yaml:"protocol"`
 					Description string `yaml:"description"`
 					Destination string `yaml:"destination"`
@@ -70,7 +72,7 @@ func TestCreateSubnet(t *testing.T) {
 					},
 				},
 				SecurityLists: []struct {
-					Type        string `yaml:"type"`
+					DisplayName string `yaml:"display_name"`
 					Protocol    string `yaml:"protocol"`
 					Description string `yaml:"description"`
 					Destination string `yaml:"destination"`
@@ -106,7 +108,7 @@ func TestCreateSubnet(t *testing.T) {
 					},
 				},
 				SecurityLists: []struct {
-					Type        string `yaml:"type"`
+					DisplayName string `yaml:"display_name"`
 					Protocol    string `yaml:"protocol"`
 					Description string `yaml:"description"`
 					Destination string `yaml:"destination"`
@@ -137,7 +139,7 @@ func TestCreateSubnet(t *testing.T) {
 				}
 
 				return nil
-			}, pulumi.WithMocks("project", "stack", mocks(0)))
+			}, pulumi.WithMocks("project", "stack", SubnetMocks(0)))
 
 			if tt.expectedError && err == nil {
 				t.Errorf("Expected error but got none")
@@ -159,7 +161,7 @@ func TestCreateSubnetWithEmptyConfig(t *testing.T) {
 			CidrBlock string `yaml:"cidr_block"`
 		}{},
 		SecurityLists: []struct {
-			Type        string `yaml:"type"`
+			DisplayName string `yaml:"display_name"`
 			Protocol    string `yaml:"protocol"`
 			Description string `yaml:"description"`
 			Destination string `yaml:"destination"`
@@ -181,7 +183,7 @@ func TestCreateSubnetWithEmptyConfig(t *testing.T) {
 			t.Error("Expected subnet to be created, but got nil")
 		}
 		return nil
-	}, pulumi.WithMocks("project", "stack", mocks(0)))
+	}, pulumi.WithMocks("project", "stack", SubnetMocks(0)))
 
 	if err == nil {
 		t.Errorf("Expected error with empty subnets config but got none")
@@ -203,7 +205,7 @@ func TestCreateSubnetWithInvalidIndex(t *testing.T) {
 			},
 		},
 		SecurityLists: []struct {
-			Type        string `yaml:"type"`
+			DisplayName string `yaml:"display_name"`
 			Protocol    string `yaml:"protocol"`
 			Description string `yaml:"description"`
 			Destination string `yaml:"destination"`
@@ -236,7 +238,7 @@ func TestCreateSubnetWithInvalidIndex(t *testing.T) {
 					t.Error("Expected subnet to be created, but got nil")
 				}
 				return nil
-			}, pulumi.WithMocks("project", "stack", mocks(0)))
+			}, pulumi.WithMocks("project", "stack", SubnetMocks(0)))
 
 			if err == nil {
 				t.Errorf("Expected error with invalid index %d but got none", tt.subnetIndex)
@@ -268,7 +270,7 @@ func TestCreateAllSubnets(t *testing.T) {
 			},
 		},
 		SecurityLists: []struct {
-			Type        string `yaml:"type"`
+			DisplayName string `yaml:"display_name"`
 			Protocol    string `yaml:"protocol"`
 			Description string `yaml:"description"`
 			Destination string `yaml:"destination"`
@@ -298,7 +300,7 @@ func TestCreateAllSubnets(t *testing.T) {
 		}
 
 		return nil
-	}, pulumi.WithMocks("project", "stack", mocks(0)))
+	}, pulumi.WithMocks("project", "stack", SubnetMocks(0)))
 
 	if err != nil {
 		t.Errorf("Unexpected error creating all subnets: %v", err)
@@ -315,7 +317,7 @@ func TestCreateAllSubnetsWithEmptySlice(t *testing.T) {
 			CidrBlock string `yaml:"cidr_block"`
 		}{},
 		SecurityLists: []struct {
-			Type        string `yaml:"type"`
+			DisplayName string `yaml:"display_name"`
 			Protocol    string `yaml:"protocol"`
 			Description string `yaml:"description"`
 			Destination string `yaml:"destination"`
@@ -339,7 +341,7 @@ func TestCreateAllSubnetsWithEmptySlice(t *testing.T) {
 		}
 
 		return nil
-	}, pulumi.WithMocks("project", "stack", mocks(0)))
+	}, pulumi.WithMocks("project", "stack", SubnetMocks(0)))
 
 	if err != nil {
 		t.Errorf("Unexpected error with empty subnets slice: %v", err)

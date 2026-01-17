@@ -1,11 +1,20 @@
 package network
 
 import (
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"testing"
 )
 
-type mocks int
+type VCNMocks int
+
+func (VCNMocks) NewResource(args pulumi.MockResourceArgs) (string, resource.PropertyMap, error) {
+	return args.Name + "_id", args.Inputs, nil
+}
+
+func (VCNMocks) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error) {
+	return args.Args, nil
+}
 
 func TestCreateVCN(t *testing.T) {
 	tests := []struct {
@@ -27,7 +36,7 @@ func TestCreateVCN(t *testing.T) {
 					{Name: "subnet1", CidrBlock: "10.0.1.0/24"},
 				},
 				SecurityLists: []struct {
-					Type        string `yaml:"type"`
+					DisplayName string `yaml:"display_name"`
 					Protocol    string `yaml:"protocol"`
 					Description string `yaml:"description"`
 					Destination string `yaml:"destination"`
@@ -39,7 +48,7 @@ func TestCreateVCN(t *testing.T) {
 					} `yaml:"tcp_options"`
 				}{
 					{
-						Type:        "ingress",
+						DisplayName: "ingress",
 						Protocol:    "tcp",
 						Description: "Allow SSH",
 						Source:      "0.0.0.0/0",
@@ -67,7 +76,7 @@ func TestCreateVCN(t *testing.T) {
 					CidrBlock string `yaml:"cidr_block"`
 				}{},
 				SecurityLists: []struct {
-					Type        string `yaml:"type"`
+					DisplayName string `yaml:"display_name"`
 					Protocol    string `yaml:"protocol"`
 					Description string `yaml:"description"`
 					Destination string `yaml:"destination"`
@@ -97,7 +106,7 @@ func TestCreateVCN(t *testing.T) {
 				}
 
 				return nil
-			}, pulumi.WithMocks("project", "stack", mocks(0)))
+			}, pulumi.WithMocks("project", "stack", VCNMocks(0)))
 
 			if tt.expectedError && err == nil {
 				t.Errorf("Expected error but got none")
@@ -125,7 +134,7 @@ func TestCreateVCNWithEmptyConfig(t *testing.T) {
 			t.Error("Expected VCN to be created, but got nil")
 		}
 		return nil
-	}, pulumi.WithMocks("project", "stack", mocks(0)))
+	}, pulumi.WithMocks("project", "stack", VCNMocks(0)))
 
 	if err != nil {
 		t.Errorf("Unexpected error with empty config: %v", err)
@@ -148,7 +157,7 @@ func TestCreateVCNWithInvalidCidr(t *testing.T) {
 			t.Error("Expected VCN to be created, but got nil")
 		}
 		return nil
-	}, pulumi.WithMocks("project", "stack", mocks(0)))
+	}, pulumi.WithMocks("project", "stack", VCNMocks(0)))
 
 	if err != nil {
 		t.Errorf("Unexpected error with invalid CIDR: %v", err)
