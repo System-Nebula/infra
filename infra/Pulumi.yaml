@@ -1,0 +1,8 @@
+---
+name: infra
+description: OCI Go pulumi based configuration
+runtime: go
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: oci-go
