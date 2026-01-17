@@ -129,7 +129,8 @@ func TestCreateSubnet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := pulumi.RunErr(func(ctx *pulumi.Context) error {
-				subnet, err := tt.netCfg.CreateSubnet(ctx, tt.subnetIndex, tt.vcnID)
+				seclists := []string{"seclist-1", "seclist-2"}
+				subnet, err := tt.netCfg.CreateSubnet(ctx, tt.subnetIndex, tt.vcnID, seclists)
 				if err != nil {
 					return err
 				}
@@ -175,7 +176,8 @@ func TestCreateSubnetWithEmptyConfig(t *testing.T) {
 	}
 
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
-		subnet, err := netCfg.CreateSubnet(ctx, 0, "vcn-123")
+		seclists := []string{"seclist-1", "seclist-2"}
+		subnet, err := netCfg.CreateSubnet(ctx, 0, "vcn-123", seclists)
 		if err != nil {
 			return err
 		}
@@ -230,7 +232,8 @@ func TestCreateSubnetWithInvalidIndex(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := pulumi.RunErr(func(ctx *pulumi.Context) error {
-				subnet, err := netCfg.CreateSubnet(ctx, tt.subnetIndex, "vcn-123")
+				seclists := []string{"seclist-1", "seclist-2"}
+				subnet, err := netCfg.CreateSubnet(ctx, tt.subnetIndex, "vcn-123", seclists)
 				if err != nil {
 					return err
 				}
@@ -284,7 +287,8 @@ func TestCreateAllSubnets(t *testing.T) {
 	}
 
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
-		subnets, err := netCfg.CreateAllSubnets(ctx, "vcn-123")
+		seclists := []string{"seclist-1", "seclist-2"}
+		subnets, err := netCfg.CreateAllSubnets(ctx, "vcn-123", seclists)
 		if err != nil {
 			return err
 		}
@@ -331,7 +335,8 @@ func TestCreateAllSubnetsWithEmptySlice(t *testing.T) {
 	}
 
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
-		subnets, err := netCfg.CreateAllSubnets(ctx, "vcn-123")
+		seclists := []string{"seclist-1", "seclist-2"}
+		subnets, err := netCfg.CreateAllSubnets(ctx, "vcn-123", seclists)
 		if err != nil {
 			return err
 		}
