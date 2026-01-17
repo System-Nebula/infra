@@ -13,6 +13,10 @@ type NetCfg struct {
 	CompartmentID string
 	CidrBlock     string
 	DisplayName   string
+	Subnets       []struct {
+		Name      string
+		CidrBlock string
+	}
 }
 
 // CreateVCN creates a vcn within oci
