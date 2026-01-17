@@ -32,11 +32,19 @@
       '';
     };
 
-    build-project = {
+    preview = {
+      description = "Displays the expected infra";
+      exec = ''
+        cd $(git rev-parse --show-toplevel)/infra
+        pulumi preview
+      '';
+    };
+
+    build = {
       description = "builds go project";
       exec = ''
         cd $(git rev-parse --show-toplevel)/infra
-        go build ./...
+        go build
       '';
     };
 
@@ -74,29 +82,25 @@
     convco.enable = true;
 
     # Go tools - configure to run only in infra directory
-    infra-gotest = {
+    golangci-lint = {
       enable = true;
-      name = "Go tests (infra)";
-      entry = "cd infra && go test -v ./...";
+      name = "golangci-lint";
       files = "^infra/.*\\.go$";
-      language = "system";
+      entry = "bash -c 'cd infra && golangci-lint run'";
       pass_filenames = false;
     };
-    infra-golangci-lint = {
+
+    gotest = {
       enable = true;
-      name = "golangci-lint (infra)";
-      entry = "cd infra && golangci-lint run";
+      name = "gotest";
       files = "^infra/.*\\.go$";
-      language = "system";
+      entry = "bash -c 'cd infra && go test ./...'";
       pass_filenames = false;
     };
-    infra-gofmt = {
+
+    gofmt = {
       enable = true;
-      name = "gofmt (infra)";
-      entry = "cd infra && gofmt -l -w .";
       files = "^infra/.*\\.go$";
-      language = "system";
-      pass_filenames = false;
     };
 
     # YAML tools
