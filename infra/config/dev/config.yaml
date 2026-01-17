@@ -1,0 +1,52 @@
+---
+compartment_id: "ocid1.compartment.oc1..example"
+cidr_block: "10.0.0.0/16"
+display_name: "dev-vcn"
+
+subnets:
+  - name: "public-subnet"
+    cidr_block: "10.0.1.0/24"
+  - name: "private-subnet"
+    cidr_block: "10.0.2.0/24"
+  - name: "database-subnet"
+    cidr_block: "10.0.3.0/24"
+
+security_lists:
+  - display_name: "public-ingress"
+    protocol: "6"
+    description: "Allow HTTP/HTTPS/SSH access"
+    source: "0.0.0.0/0"
+    destination: null
+    stateless: false
+    tcp_options:
+      - min_port: 22
+        max_port: 22
+      - min_port: 80
+        max_port: 80
+      - min_port: 443
+        max_port: 443
+  - display_name: "public-egress"
+    protocol: "6"
+    description: "Allow all outbound traffic"
+    source: null
+    destination: "0.0.0.0/0"
+    stateless: false
+    tcp_options: []
+  - display_name: "private-ingress"
+    protocol: "6"
+    description: "Allow SSH from bastion"
+    source: "10.0.1.0/24"
+    destination: null
+    stateless: false
+    tcp_options:
+      - min_port: 22
+        max_port: 22
+  - display_name: "database-ingress"
+    protocol: "6"
+    description: "Allow database access from private subnet"
+    source: "10.0.2.0/24"
+    destination: null
+    stateless: false
+    tcp_options:
+      - min_port: 1521
+        max_port: 1521
