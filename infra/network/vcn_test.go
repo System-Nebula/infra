@@ -1,6 +1,8 @@
 package network
 
 import (
+	"infra/config"
+
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"testing"
@@ -26,38 +28,25 @@ func TestCreateVCN(t *testing.T) {
 		{
 			name: "Valid VCN creation",
 			netCfg: NetCfg{
-				CompartmentID: "compartment-123",
-				CidrBlock:     "10.0.0.0/16",
-				DisplayName:   "test-vcn",
-				Subnets: []struct {
-					Name      string `yaml:"name"`
-					CidrBlock string `yaml:"cidr_block"`
-				}{
-					{Name: "subnet1", CidrBlock: "10.0.1.0/24"},
-				},
-				SecurityLists: []struct {
-					DisplayName string `yaml:"display_name"`
-					Protocol    string `yaml:"protocol"`
-					Description string `yaml:"description"`
-					Destination string `yaml:"destination"`
-					Source      string `yaml:"source"`
-					Stateless   bool   `yaml:"stateless"`
-					TCPOptions  []struct {
-						MinPort int `yaml:"min_port"`
-						MaxPort int `yaml:"max_port"`
-					} `yaml:"tcp_options"`
-				}{
-					{
-						DisplayName: "ingress",
-						Protocol:    "tcp",
-						Description: "Allow SSH",
-						Source:      "0.0.0.0/0",
-						Stateless:   false,
-						TCPOptions: []struct {
-							MinPort int `yaml:"min_port"`
-							MaxPort int `yaml:"max_port"`
-						}{
-							{MinPort: 22, MaxPort: 22},
+				NetworkConfig: config.NetworkConfig{
+					BaseConfig: config.BaseConfig{
+						CompartmentID: "compartment-123",
+					},
+					CidrBlock:   "10.0.0.0/16",
+					DisplayName: "test-vcn",
+					Subnets: []config.SubnetConfig{
+						{Name: "subnet1", CidrBlock: "10.0.1.0/24"},
+					},
+					SecurityLists: []config.SecurityListConfig{
+						{
+							DisplayName: "ingress",
+							Protocol:    "tcp",
+							Description: "Allow SSH",
+							Source:      "0.0.0.0/0",
+							Stateless:   false,
+							TCPOptions: []config.TCPOptionConfig{
+								{MinPort: 22, MaxPort: 22},
+							},
 						},
 					},
 				},
@@ -68,25 +57,15 @@ func TestCreateVCN(t *testing.T) {
 		{
 			name: "VCN with different CIDR",
 			netCfg: NetCfg{
-				CompartmentID: "compartment-456",
-				CidrBlock:     "192.168.0.0/24",
-				DisplayName:   "another-vcn",
-				Subnets: []struct {
-					Name      string `yaml:"name"`
-					CidrBlock string `yaml:"cidr_block"`
-				}{},
-				SecurityLists: []struct {
-					DisplayName string `yaml:"display_name"`
-					Protocol    string `yaml:"protocol"`
-					Description string `yaml:"description"`
-					Destination string `yaml:"destination"`
-					Source      string `yaml:"source"`
-					Stateless   bool   `yaml:"stateless"`
-					TCPOptions  []struct {
-						MinPort int `yaml:"min_port"`
-						MaxPort int `yaml:"max_port"`
-					} `yaml:"tcp_options"`
-				}{},
+				NetworkConfig: config.NetworkConfig{
+					BaseConfig: config.BaseConfig{
+						CompartmentID: "compartment-456",
+					},
+					CidrBlock:     "192.168.0.0/24",
+					DisplayName:   "another-vcn",
+					Subnets:       []config.SubnetConfig{},
+					SecurityLists: []config.SecurityListConfig{},
+				},
 			},
 			vcnName:       "another-vcn",
 			expectedError: false,
@@ -120,9 +99,13 @@ func TestCreateVCN(t *testing.T) {
 
 func TestCreateVCNWithEmptyConfig(t *testing.T) {
 	netCfg := NetCfg{
-		CompartmentID: "",
-		CidrBlock:     "",
-		DisplayName:   "",
+		NetworkConfig: config.NetworkConfig{
+			BaseConfig: config.BaseConfig{
+				CompartmentID: "",
+			},
+			CidrBlock:   "",
+			DisplayName: "",
+		},
 	}
 
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
@@ -143,9 +126,13 @@ func TestCreateVCNWithEmptyConfig(t *testing.T) {
 
 func TestCreateVCNWithInvalidCidr(t *testing.T) {
 	netCfg := NetCfg{
-		CompartmentID: "compartment-123",
-		CidrBlock:     "invalid-cidr",
-		DisplayName:   "test-vcn",
+		NetworkConfig: config.NetworkConfig{
+			BaseConfig: config.BaseConfig{
+				CompartmentID: "compartment-123",
+			},
+			CidrBlock:   "invalid-cidr",
+			DisplayName: "test-vcn",
+		},
 	}
 
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {

@@ -1,6 +1,8 @@
 package network
 
 import (
+	"infra/config"
+
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"testing"
@@ -26,52 +28,36 @@ func TestCreateACL(t *testing.T) {
 		{
 			name: "Valid security lists creation",
 			netCfg: NetCfg{
-				CompartmentID: "compartment-123",
-				CidrBlock:     "10.0.0.0/16",
-				DisplayName:   "test-vcn",
-				Subnets: []struct {
-					Name      string `yaml:"name"`
-					CidrBlock string `yaml:"cidr_block"`
-				}{
-					{Name: "subnet1", CidrBlock: "10.0.1.0/24"},
-				},
-				SecurityLists: []struct {
-					DisplayName string `yaml:"display_name"`
-					Protocol    string `yaml:"protocol"`
-					Description string `yaml:"description"`
-					Destination string `yaml:"destination"`
-					Source      string `yaml:"source"`
-					Stateless   bool   `yaml:"stateless"`
-					TCPOptions  []struct {
-						MinPort int `yaml:"min_port"`
-						MaxPort int `yaml:"max_port"`
-					} `yaml:"tcp_options"`
-				}{
-					{
-						DisplayName: "public-ingress",
-						Protocol:    "6",
-						Description: "Allow HTTP/HTTPS/SSH access",
-						Source:      "0.0.0.0/0",
-						Stateless:   false,
-						TCPOptions: []struct {
-							MinPort int `yaml:"min_port"`
-							MaxPort int `yaml:"max_port"`
-						}{
-							{MinPort: 22, MaxPort: 22},
-							{MinPort: 80, MaxPort: 80},
-							{MinPort: 443, MaxPort: 443},
-						},
+				NetworkConfig: config.NetworkConfig{
+					BaseConfig: config.BaseConfig{
+						CompartmentID: "compartment-123",
 					},
-					{
-						DisplayName: "public-egress",
-						Protocol:    "6",
-						Description: "Allow all outbound traffic",
-						Destination: "0.0.0.0/0",
-						Stateless:   false,
-						TCPOptions: []struct {
-							MinPort int `yaml:"min_port"`
-							MaxPort int `yaml:"max_port"`
-						}{},
+					CidrBlock:   "10.0.0.0/16",
+					DisplayName: "test-vcn",
+					Subnets: []config.SubnetConfig{
+						{Name: "subnet1", CidrBlock: "10.0.1.0/24"},
+					},
+					SecurityLists: []config.SecurityListConfig{
+						{
+							DisplayName: "public-ingress",
+							Protocol:    "6",
+							Description: "Allow HTTP/HTTPS/SSH access",
+							Source:      "0.0.0.0/0",
+							Stateless:   false,
+							TCPOptions: []config.TCPOptionConfig{
+								{MinPort: 22, MaxPort: 22},
+								{MinPort: 80, MaxPort: 80},
+								{MinPort: 443, MaxPort: 443},
+							},
+						},
+						{
+							DisplayName: "public-egress",
+							Protocol:    "6",
+							Description: "Allow all outbound traffic",
+							Destination: "0.0.0.0/0",
+							Stateless:   false,
+							TCPOptions:  []config.TCPOptionConfig{},
+						},
 					},
 				},
 			},
@@ -81,25 +67,15 @@ func TestCreateACL(t *testing.T) {
 		{
 			name: "Empty security lists",
 			netCfg: NetCfg{
-				CompartmentID: "compartment-456",
-				CidrBlock:     "192.168.0.0/16",
-				DisplayName:   "empty-vcn",
-				Subnets: []struct {
-					Name      string `yaml:"name"`
-					CidrBlock string `yaml:"cidr_block"`
-				}{},
-				SecurityLists: []struct {
-					DisplayName string `yaml:"display_name"`
-					Protocol    string `yaml:"protocol"`
-					Description string `yaml:"description"`
-					Destination string `yaml:"destination"`
-					Source      string `yaml:"source"`
-					Stateless   bool   `yaml:"stateless"`
-					TCPOptions  []struct {
-						MinPort int `yaml:"min_port"`
-						MaxPort int `yaml:"max_port"`
-					} `yaml:"tcp_options"`
-				}{},
+				NetworkConfig: config.NetworkConfig{
+					BaseConfig: config.BaseConfig{
+						CompartmentID: "compartment-456",
+					},
+					CidrBlock:     "192.168.0.0/16",
+					DisplayName:   "empty-vcn",
+					Subnets:       []config.SubnetConfig{},
+					SecurityLists: []config.SecurityListConfig{},
+				},
 			},
 			vcnID:         "vcn-456",
 			expectedError: false,
@@ -139,36 +115,23 @@ func TestCreateACL(t *testing.T) {
 
 func TestCreateACLEgressOnly(t *testing.T) {
 	netCfg := NetCfg{
-		CompartmentID: "compartment-123",
-		CidrBlock:     "10.0.0.0/16",
-		DisplayName:   "egress-only-vcn",
-		Subnets: []struct {
-			Name      string `yaml:"name"`
-			CidrBlock string `yaml:"cidr_block"`
-		}{},
-		SecurityLists: []struct {
-			DisplayName string `yaml:"display_name"`
-			Protocol    string `yaml:"protocol"`
-			Description string `yaml:"description"`
-			Destination string `yaml:"destination"`
-			Source      string `yaml:"source"`
-			Stateless   bool   `yaml:"stateless"`
-			TCPOptions  []struct {
-				MinPort int `yaml:"min_port"`
-				MaxPort int `yaml:"max_port"`
-			} `yaml:"tcp_options"`
-		}{
-			{
-				DisplayName: "egress-only",
-				Protocol:    "6",
-				Description: "Allow outbound HTTP traffic",
-				Destination: "0.0.0.0/0",
-				Stateless:   false,
-				TCPOptions: []struct {
-					MinPort int `yaml:"min_port"`
-					MaxPort int `yaml:"max_port"`
-				}{
-					{MinPort: 80, MaxPort: 80},
+		NetworkConfig: config.NetworkConfig{
+			BaseConfig: config.BaseConfig{
+				CompartmentID: "compartment-123",
+			},
+			CidrBlock:   "10.0.0.0/16",
+			DisplayName: "egress-only-vcn",
+			Subnets:     []config.SubnetConfig{},
+			SecurityLists: []config.SecurityListConfig{
+				{
+					DisplayName: "egress-only",
+					Protocol:    "6",
+					Description: "Allow outbound HTTP traffic",
+					Destination: "0.0.0.0/0",
+					Stateless:   false,
+					TCPOptions: []config.TCPOptionConfig{
+						{MinPort: 80, MaxPort: 80},
+					},
 				},
 			},
 		},
@@ -195,36 +158,23 @@ func TestCreateACLEgressOnly(t *testing.T) {
 
 func TestCreateACLIngressOnly(t *testing.T) {
 	netCfg := NetCfg{
-		CompartmentID: "compartment-123",
-		CidrBlock:     "10.0.0.0/16",
-		DisplayName:   "ingress-only-vcn",
-		Subnets: []struct {
-			Name      string `yaml:"name"`
-			CidrBlock string `yaml:"cidr_block"`
-		}{},
-		SecurityLists: []struct {
-			DisplayName string `yaml:"display_name"`
-			Protocol    string `yaml:"protocol"`
-			Description string `yaml:"description"`
-			Destination string `yaml:"destination"`
-			Source      string `yaml:"source"`
-			Stateless   bool   `yaml:"stateless"`
-			TCPOptions  []struct {
-				MinPort int `yaml:"min_port"`
-				MaxPort int `yaml:"max_port"`
-			} `yaml:"tcp_options"`
-		}{
-			{
-				DisplayName: "ingress-only",
-				Protocol:    "6",
-				Description: "Allow inbound SSH",
-				Source:      "10.0.1.0/24",
-				Stateless:   false,
-				TCPOptions: []struct {
-					MinPort int `yaml:"min_port"`
-					MaxPort int `yaml:"max_port"`
-				}{
-					{MinPort: 22, MaxPort: 22},
+		NetworkConfig: config.NetworkConfig{
+			BaseConfig: config.BaseConfig{
+				CompartmentID: "compartment-123",
+			},
+			CidrBlock:   "10.0.0.0/16",
+			DisplayName: "ingress-only-vcn",
+			Subnets:     []config.SubnetConfig{},
+			SecurityLists: []config.SecurityListConfig{
+				{
+					DisplayName: "ingress-only",
+					Protocol:    "6",
+					Description: "Allow inbound SSH",
+					Source:      "10.0.1.0/24",
+					Stateless:   false,
+					TCPOptions: []config.TCPOptionConfig{
+						{MinPort: 22, MaxPort: 22},
+					},
 				},
 			},
 		},
@@ -251,36 +201,23 @@ func TestCreateACLIngressOnly(t *testing.T) {
 
 func TestCreateACLStatelessRules(t *testing.T) {
 	netCfg := NetCfg{
-		CompartmentID: "compartment-123",
-		CidrBlock:     "10.0.0.0/16",
-		DisplayName:   "stateless-vcn",
-		Subnets: []struct {
-			Name      string `yaml:"name"`
-			CidrBlock string `yaml:"cidr_block"`
-		}{},
-		SecurityLists: []struct {
-			DisplayName string `yaml:"display_name"`
-			Protocol    string `yaml:"protocol"`
-			Description string `yaml:"description"`
-			Destination string `yaml:"destination"`
-			Source      string `yaml:"source"`
-			Stateless   bool   `yaml:"stateless"`
-			TCPOptions  []struct {
-				MinPort int `yaml:"min_port"`
-				MaxPort int `yaml:"max_port"`
-			} `yaml:"tcp_options"`
-		}{
-			{
-				DisplayName: "stateless-ingress",
-				Protocol:    "6",
-				Description: "Stateless inbound traffic",
-				Source:      "0.0.0.0/0",
-				Stateless:   true,
-				TCPOptions: []struct {
-					MinPort int `yaml:"min_port"`
-					MaxPort int `yaml:"max_port"`
-				}{
-					{MinPort: 80, MaxPort: 80},
+		NetworkConfig: config.NetworkConfig{
+			BaseConfig: config.BaseConfig{
+				CompartmentID: "compartment-123",
+			},
+			CidrBlock:   "10.0.0.0/16",
+			DisplayName: "stateless-vcn",
+			Subnets:     []config.SubnetConfig{},
+			SecurityLists: []config.SecurityListConfig{
+				{
+					DisplayName: "stateless-ingress",
+					Protocol:    "6",
+					Description: "Stateless inbound traffic",
+					Source:      "0.0.0.0/0",
+					Stateless:   true,
+					TCPOptions: []config.TCPOptionConfig{
+						{MinPort: 80, MaxPort: 80},
+					},
 				},
 			},
 		},

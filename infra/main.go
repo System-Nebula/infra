@@ -1,24 +1,37 @@
 package main
 
 import (
+	"infra/config"
+	"infra/network"
+	"log"
+
 	"github.com/pulumi/pulumi-oci/sdk/go/oci/identity"
 	"github.com/pulumi/pulumi-oci/sdk/go/oci/objectstorage"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"infra/network"
 )
 
 // TODO properly orchestrate resource creation
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
-		var ncfg network.NetCfg
-		err := ncfg.LoadFromYaml("config/dev/config.yaml")
+		var cfg config.Config
+		err := cfg.LoadFromYaml("config/dev/config.yaml")
 		if err != nil {
 			return err
 		}
-		_, err = ncfg.CreateVCN(ctx, ncfg.DisplayName)
+
+		ncfg := network.NetCfg{NetworkConfig: cfg.Network}
+		vcn, err := ncfg.CreateVCN(ctx, ncfg.DisplayName)
+
 		if err != nil {
+			log.Printf("Failed to create VCN with error: %v", err)
 			return err
 		}
+		_, err = ncfg.CreateACL(ctx, vcn.ID().ElementType().String())
+		if err != nil {
+			log.Printf("Failed to create security lists failed with error: %v", err)
+			return err
+		}
+		//subnet, err := ncfg.CreateAllSubnets(ctx, vcn.ID().ElementType().String(), seclists)
 
 		myCompartment, err := identity.NewCompartment(ctx, "my-compartment", &identity.CompartmentArgs{
 			Name:         pulumi.String("my-compartment"),

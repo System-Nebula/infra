@@ -3,6 +3,7 @@ package network
 import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"infra/config"
 	"testing"
 )
 
@@ -27,30 +28,20 @@ func TestCreateSubnet(t *testing.T) {
 		{
 			name: "Valid subnet creation",
 			netCfg: NetCfg{
-				CompartmentID: "compartment-123",
-				CidrBlock:     "10.0.0.0/16",
-				DisplayName:   "test-vcn",
-				Subnets: []struct {
-					Name      string `yaml:"name"`
-					CidrBlock string `yaml:"cidr_block"`
-				}{
-					{
-						Name:      "my-subnet",
-						CidrBlock: "10.0.1.0/24",
+				NetworkConfig: config.NetworkConfig{
+					BaseConfig: config.BaseConfig{
+						CompartmentID: "compartment-123",
 					},
+					CidrBlock:   "10.0.0.0/16",
+					DisplayName: "test-vcn",
+					Subnets: []config.SubnetConfig{
+						{
+							Name:      "my-subnet",
+							CidrBlock: "10.0.1.0/24",
+						},
+					},
+					SecurityLists: []config.SecurityListConfig{},
 				},
-				SecurityLists: []struct {
-					DisplayName string `yaml:"display_name"`
-					Protocol    string `yaml:"protocol"`
-					Description string `yaml:"description"`
-					Destination string `yaml:"destination"`
-					Source      string `yaml:"source"`
-					Stateless   bool   `yaml:"stateless"`
-					TCPOptions  []struct {
-						MinPort int `yaml:"min_port"`
-						MaxPort int `yaml:"max_port"`
-					} `yaml:"tcp_options"`
-				}{},
 			},
 			subnetIndex:   0,
 			vcnID:         "vcn-123",
@@ -59,30 +50,20 @@ func TestCreateSubnet(t *testing.T) {
 		{
 			name: "Subnet with different CIDR",
 			netCfg: NetCfg{
-				CompartmentID: "compartment-456",
-				CidrBlock:     "192.168.0.0/16",
-				DisplayName:   "another-vcn",
-				Subnets: []struct {
-					Name      string `yaml:"name"`
-					CidrBlock string `yaml:"cidr_block"`
-				}{
-					{
-						Name:      "another-subnet",
-						CidrBlock: "192.168.1.0/24",
+				NetworkConfig: config.NetworkConfig{
+					BaseConfig: config.BaseConfig{
+						CompartmentID: "compartment-456",
 					},
+					CidrBlock:   "192.168.0.0/16",
+					DisplayName: "another-vcn",
+					Subnets: []config.SubnetConfig{
+						{
+							Name:      "another-subnet",
+							CidrBlock: "192.168.1.0/24",
+						},
+					},
+					SecurityLists: []config.SecurityListConfig{},
 				},
-				SecurityLists: []struct {
-					DisplayName string `yaml:"display_name"`
-					Protocol    string `yaml:"protocol"`
-					Description string `yaml:"description"`
-					Destination string `yaml:"destination"`
-					Source      string `yaml:"source"`
-					Stateless   bool   `yaml:"stateless"`
-					TCPOptions  []struct {
-						MinPort int `yaml:"min_port"`
-						MaxPort int `yaml:"max_port"`
-					} `yaml:"tcp_options"`
-				}{},
 			},
 			subnetIndex:   0,
 			vcnID:         "vcn-456",
@@ -91,34 +72,24 @@ func TestCreateSubnet(t *testing.T) {
 		{
 			name: "Multiple subnets - create second subnet",
 			netCfg: NetCfg{
-				CompartmentID: "compartment-789",
-				CidrBlock:     "172.16.0.0/16",
-				DisplayName:   "multi-subnet-vcn",
-				Subnets: []struct {
-					Name      string `yaml:"name"`
-					CidrBlock string `yaml:"cidr_block"`
-				}{
-					{
-						Name:      "first-subnet",
-						CidrBlock: "172.16.1.0/24",
+				NetworkConfig: config.NetworkConfig{
+					BaseConfig: config.BaseConfig{
+						CompartmentID: "compartment-789",
 					},
-					{
-						Name:      "second-subnet",
-						CidrBlock: "172.16.2.0/24",
+					CidrBlock:   "172.16.0.0/16",
+					DisplayName: "multi-subnet-vcn",
+					Subnets: []config.SubnetConfig{
+						{
+							Name:      "first-subnet",
+							CidrBlock: "172.16.1.0/24",
+						},
+						{
+							Name:      "second-subnet",
+							CidrBlock: "172.16.2.0/24",
+						},
 					},
+					SecurityLists: []config.SecurityListConfig{},
 				},
-				SecurityLists: []struct {
-					DisplayName string `yaml:"display_name"`
-					Protocol    string `yaml:"protocol"`
-					Description string `yaml:"description"`
-					Destination string `yaml:"destination"`
-					Source      string `yaml:"source"`
-					Stateless   bool   `yaml:"stateless"`
-					TCPOptions  []struct {
-						MinPort int `yaml:"min_port"`
-						MaxPort int `yaml:"max_port"`
-					} `yaml:"tcp_options"`
-				}{},
 			},
 			subnetIndex:   1,
 			vcnID:         "vcn-789",
@@ -154,25 +125,15 @@ func TestCreateSubnet(t *testing.T) {
 
 func TestCreateSubnetWithEmptyConfig(t *testing.T) {
 	netCfg := NetCfg{
-		CompartmentID: "",
-		CidrBlock:     "",
-		DisplayName:   "",
-		Subnets: []struct {
-			Name      string `yaml:"name"`
-			CidrBlock string `yaml:"cidr_block"`
-		}{},
-		SecurityLists: []struct {
-			DisplayName string `yaml:"display_name"`
-			Protocol    string `yaml:"protocol"`
-			Description string `yaml:"description"`
-			Destination string `yaml:"destination"`
-			Source      string `yaml:"source"`
-			Stateless   bool   `yaml:"stateless"`
-			TCPOptions  []struct {
-				MinPort int `yaml:"min_port"`
-				MaxPort int `yaml:"max_port"`
-			} `yaml:"tcp_options"`
-		}{},
+		NetworkConfig: config.NetworkConfig{
+			BaseConfig: config.BaseConfig{
+				CompartmentID: "",
+			},
+			CidrBlock:     "",
+			DisplayName:   "",
+			Subnets:       []config.SubnetConfig{},
+			SecurityLists: []config.SecurityListConfig{},
+		},
 	}
 
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
@@ -194,30 +155,20 @@ func TestCreateSubnetWithEmptyConfig(t *testing.T) {
 
 func TestCreateSubnetWithInvalidIndex(t *testing.T) {
 	netCfg := NetCfg{
-		CompartmentID: "compartment-123",
-		CidrBlock:     "10.0.0.0/16",
-		DisplayName:   "test-vcn",
-		Subnets: []struct {
-			Name      string `yaml:"name"`
-			CidrBlock string `yaml:"cidr_block"`
-		}{
-			{
-				Name:      "test-subnet",
-				CidrBlock: "10.0.1.0/24",
+		NetworkConfig: config.NetworkConfig{
+			BaseConfig: config.BaseConfig{
+				CompartmentID: "compartment-123",
 			},
+			CidrBlock:   "10.0.0.0/16",
+			DisplayName: "test-vcn",
+			Subnets: []config.SubnetConfig{
+				{
+					Name:      "test-subnet",
+					CidrBlock: "10.0.1.0/24",
+				},
+			},
+			SecurityLists: []config.SecurityListConfig{},
 		},
-		SecurityLists: []struct {
-			DisplayName string `yaml:"display_name"`
-			Protocol    string `yaml:"protocol"`
-			Description string `yaml:"description"`
-			Destination string `yaml:"destination"`
-			Source      string `yaml:"source"`
-			Stateless   bool   `yaml:"stateless"`
-			TCPOptions  []struct {
-				MinPort int `yaml:"min_port"`
-				MaxPort int `yaml:"max_port"`
-			} `yaml:"tcp_options"`
-		}{},
 	}
 
 	tests := []struct {
@@ -252,38 +203,28 @@ func TestCreateSubnetWithInvalidIndex(t *testing.T) {
 
 func TestCreateAllSubnets(t *testing.T) {
 	netCfg := NetCfg{
-		CompartmentID: "compartment-123",
-		CidrBlock:     "10.0.0.0/16",
-		DisplayName:   "test-vcn",
-		Subnets: []struct {
-			Name      string `yaml:"name"`
-			CidrBlock string `yaml:"cidr_block"`
-		}{
-			{
-				Name:      "subnet-1",
-				CidrBlock: "10.0.1.0/24",
+		NetworkConfig: config.NetworkConfig{
+			BaseConfig: config.BaseConfig{
+				CompartmentID: "compartment-123",
 			},
-			{
-				Name:      "subnet-2",
-				CidrBlock: "10.0.2.0/24",
+			CidrBlock:   "10.0.0.0/16",
+			DisplayName: "test-vcn",
+			Subnets: []config.SubnetConfig{
+				{
+					Name:      "subnet-1",
+					CidrBlock: "10.0.1.0/24",
+				},
+				{
+					Name:      "subnet-2",
+					CidrBlock: "10.0.2.0/24",
+				},
+				{
+					Name:      "subnet-3",
+					CidrBlock: "10.0.3.0/24",
+				},
 			},
-			{
-				Name:      "subnet-3",
-				CidrBlock: "10.0.3.0/24",
-			},
+			SecurityLists: []config.SecurityListConfig{},
 		},
-		SecurityLists: []struct {
-			DisplayName string `yaml:"display_name"`
-			Protocol    string `yaml:"protocol"`
-			Description string `yaml:"description"`
-			Destination string `yaml:"destination"`
-			Source      string `yaml:"source"`
-			Stateless   bool   `yaml:"stateless"`
-			TCPOptions  []struct {
-				MinPort int `yaml:"min_port"`
-				MaxPort int `yaml:"max_port"`
-			} `yaml:"tcp_options"`
-		}{},
 	}
 
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
@@ -313,25 +254,15 @@ func TestCreateAllSubnets(t *testing.T) {
 
 func TestCreateAllSubnetsWithEmptySlice(t *testing.T) {
 	netCfg := NetCfg{
-		CompartmentID: "compartment-123",
-		CidrBlock:     "10.0.0.0/16",
-		DisplayName:   "test-vcn",
-		Subnets: []struct {
-			Name      string `yaml:"name"`
-			CidrBlock string `yaml:"cidr_block"`
-		}{},
-		SecurityLists: []struct {
-			DisplayName string `yaml:"display_name"`
-			Protocol    string `yaml:"protocol"`
-			Description string `yaml:"description"`
-			Destination string `yaml:"destination"`
-			Source      string `yaml:"source"`
-			Stateless   bool   `yaml:"stateless"`
-			TCPOptions  []struct {
-				MinPort int `yaml:"min_port"`
-				MaxPort int `yaml:"max_port"`
-			} `yaml:"tcp_options"`
-		}{},
+		NetworkConfig: config.NetworkConfig{
+			BaseConfig: config.BaseConfig{
+				CompartmentID: "compartment-123",
+			},
+			CidrBlock:     "10.0.0.0/16",
+			DisplayName:   "test-vcn",
+			Subnets:       []config.SubnetConfig{},
+			SecurityLists: []config.SecurityListConfig{},
+		},
 	}
 
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
