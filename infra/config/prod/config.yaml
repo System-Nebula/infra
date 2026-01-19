@@ -2,7 +2,7 @@
 network:
   compartment_id: "ocid1.compartment.oc1..example"
   cidr_block: "10.0.0.0/16"
-  display_name: "dev-vcn"
+  display_name: "prod-vcn"
 
   subnets:
     - name: "public-subnet"
