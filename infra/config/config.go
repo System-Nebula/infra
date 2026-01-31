@@ -29,6 +29,7 @@ type SecurityListConfig struct {
 	Source      string            `yaml:"source"`
 	Stateless   bool              `yaml:"stateless"`
 	TCPOptions  []TCPOptionConfig `yaml:"tcp_options"`
+	SubnetName  string            `yaml:"subnet_name,omitempty"`
 }
 
 type NetworkConfig struct {

@@ -14,6 +14,7 @@ network:
 
   security_lists:
     - display_name: "public-ingress"
+      subnet_name: "public-subnet"
       protocol: "6"
       description: "Allow HTTP/HTTPS/SSH access"
       source: "0.0.0.0/0"
@@ -27,6 +28,7 @@ network:
         - min_port: 443
           max_port: 443
     - display_name: "public-egress"
+      subnet_name: "public-subnet"
       protocol: "6"
       description: "Allow all outbound traffic"
       source: null
@@ -34,6 +36,7 @@ network:
       stateless: false
       tcp_options: []
     - display_name: "private-ingress"
+      subnet_name: "private-subnet"
       protocol: "6"
       description: "Allow SSH from bastion"
       source: "10.0.1.0/24"
@@ -43,6 +46,7 @@ network:
         - min_port: 22
           max_port: 22
     - display_name: "database-ingress"
+      subnet_name: "database-subnet"
       protocol: "6"
       description: "Allow database access from private subnet"
       source: "10.0.2.0/24"

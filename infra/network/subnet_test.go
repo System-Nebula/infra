@@ -1,6 +1,7 @@
 package network
 
 import (
+	"github.com/pulumi/pulumi-oci/sdk/v3/go/oci/core"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"infra/config"
@@ -281,5 +282,250 @@ func TestCreateAllSubnetsWithEmptySlice(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("Unexpected error with empty subnets slice: %v", err)
+	}
+}
+
+func TestBuildSubnetSecurityListMap(t *testing.T) {
+	tests := []struct {
+		name          string
+		netCfg        NetCfg
+		subnetName    string
+		expectedCount int
+		expectedLists []string
+	}{
+		{
+			name: "Security lists with subnet_name mapping",
+			netCfg: NetCfg{
+				NetworkConfig: config.NetworkConfig{
+					SecurityLists: []config.SecurityListConfig{
+						{
+							DisplayName: "public-ingress",
+							SubnetName:  "public-subnet",
+						},
+						{
+							DisplayName: "public-egress",
+							SubnetName:  "public-subnet",
+						},
+						{
+							DisplayName: "private-ingress",
+							SubnetName:  "private-subnet",
+						},
+					},
+				},
+			},
+			subnetName:    "public-subnet",
+			expectedCount: 2,
+			expectedLists: []string{"public-ingress", "public-egress"},
+		},
+		{
+			name: "Security lists without subnet_name",
+			netCfg: NetCfg{
+				NetworkConfig: config.NetworkConfig{
+					SecurityLists: []config.SecurityListConfig{
+						{
+							DisplayName: "default-list",
+							SubnetName:  "",
+						},
+					},
+				},
+			},
+			subnetName:    "any-subnet",
+			expectedCount: 0,
+			expectedLists: nil,
+		},
+		{
+			name: "No security lists",
+			netCfg: NetCfg{
+				NetworkConfig: config.NetworkConfig{
+					SecurityLists: []config.SecurityListConfig{},
+				},
+			},
+			subnetName:    "any-subnet",
+			expectedCount: 0,
+			expectedLists: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.netCfg.BuildSubnetSecurityListMap()
+			secLists, exists := result[tt.subnetName]
+
+			if !exists && len(tt.expectedLists) > 0 {
+				t.Errorf("Expected subnet %s to have security lists, but got none", tt.subnetName)
+			}
+
+			if exists && len(secLists) != tt.expectedCount {
+				t.Errorf("Expected %d security lists for subnet %s, but got %d", tt.expectedCount, tt.subnetName, len(secLists))
+			}
+
+			if exists && len(tt.expectedLists) > 0 {
+				for _, expected := range tt.expectedLists {
+					found := false
+					for _, actual := range secLists {
+						if actual == expected {
+							found = true
+							break
+						}
+					}
+					if !found {
+						t.Errorf("Expected security list %s not found in result", expected)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestCreateSubnetWithSecurityLists(t *testing.T) {
+	tests := []struct {
+		name            string
+		netCfg          NetCfg
+		subnetIndex     int
+		vcnID           string
+		securityListMap map[string]*core.SecurityList
+		expectedError   bool
+	}{
+		{
+			name: "Subnet with attached security lists",
+			netCfg: NetCfg{
+				NetworkConfig: config.NetworkConfig{
+					BaseConfig: config.BaseConfig{
+						CompartmentID: "compartment-123",
+					},
+					CidrBlock:   "10.0.0.0/16",
+					DisplayName: "test-vcn",
+					Subnets: []config.SubnetConfig{
+						{
+							Name:      "public-subnet",
+							CidrBlock: "10.0.1.0/24",
+						},
+					},
+					SecurityLists: []config.SecurityListConfig{
+						{
+							DisplayName: "public-ingress",
+							SubnetName:  "public-subnet",
+						},
+					},
+				},
+			},
+			subnetIndex:   0,
+			vcnID:         "vcn-123",
+			expectedError: false,
+		},
+		{
+			name: "Subnet without security lists (no mapping)",
+			netCfg: NetCfg{
+				NetworkConfig: config.NetworkConfig{
+					BaseConfig: config.BaseConfig{
+						CompartmentID: "compartment-123",
+					},
+					CidrBlock:   "10.0.0.0/16",
+					DisplayName: "test-vcn",
+					Subnets: []config.SubnetConfig{
+						{
+							Name:      "orphan-subnet",
+							CidrBlock: "10.0.9.0/24",
+						},
+					},
+					SecurityLists: []config.SecurityListConfig{
+						{
+							DisplayName: "public-ingress",
+							SubnetName:  "public-subnet",
+						},
+					},
+				},
+			},
+			subnetIndex:   0,
+			vcnID:         "vcn-123",
+			expectedError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+				subnet, err := tt.netCfg.CreateSubnetWithSecurityLists(ctx, tt.subnetIndex, tt.vcnID, tt.securityListMap)
+				if err != nil {
+					return err
+				}
+
+				if subnet == nil {
+					t.Error("Expected subnet to be created, but got nil")
+				}
+
+				return nil
+			}, pulumi.WithMocks("project", "stack", SubnetMocks(0)))
+
+			if tt.expectedError && err == nil {
+				t.Errorf("Expected error but got none")
+			}
+			if !tt.expectedError && err != nil {
+				t.Errorf("Unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestCreateAllSubnetsWithSecurityLists(t *testing.T) {
+	netCfg := NetCfg{
+		NetworkConfig: config.NetworkConfig{
+			BaseConfig: config.BaseConfig{
+				CompartmentID: "compartment-123",
+			},
+			CidrBlock:   "10.0.0.0/16",
+			DisplayName: "test-vcn",
+			Subnets: []config.SubnetConfig{
+				{
+					Name:      "public-subnet",
+					CidrBlock: "10.0.1.0/24",
+				},
+				{
+					Name:      "private-subnet",
+					CidrBlock: "10.0.2.0/24",
+				},
+				{
+					Name:      "database-subnet",
+					CidrBlock: "10.0.3.0/24",
+				},
+			},
+			SecurityLists: []config.SecurityListConfig{
+				{
+					DisplayName: "public-ingress",
+					SubnetName:  "public-subnet",
+				},
+				{
+					DisplayName: "public-egress",
+					SubnetName:  "public-subnet",
+				},
+				{
+					DisplayName: "private-ingress",
+					SubnetName:  "private-subnet",
+				},
+			},
+		},
+	}
+
+	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+		subnets, err := netCfg.CreateAllSubnetsWithSecurityLists(ctx, "vcn-123", map[string]*core.SecurityList{})
+		if err != nil {
+			return err
+		}
+
+		if len(subnets) != 3 {
+			t.Errorf("Expected 3 subnets, but got %d", len(subnets))
+		}
+
+		for i, subnet := range subnets {
+			if subnet == nil {
+				t.Errorf("Expected subnet %d to be created, but got nil", i)
+			}
+		}
+
+		return nil
+	}, pulumi.WithMocks("project", "stack", SubnetMocks(0)))
+
+	if err != nil {
+		t.Errorf("Unexpected error creating all subnets with security lists: %v", err)
 	}
 }

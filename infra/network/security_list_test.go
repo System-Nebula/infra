@@ -241,3 +241,84 @@ func TestCreateACLStatelessRules(t *testing.T) {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
+
+func TestCreateACLMap(t *testing.T) {
+	netCfg := NetCfg{
+		NetworkConfig: config.NetworkConfig{
+			BaseConfig: config.BaseConfig{
+				CompartmentID: "compartment-123",
+			},
+			CidrBlock:   "10.0.0.0/16",
+			DisplayName: "test-vcn",
+			Subnets: []config.SubnetConfig{
+				{Name: "subnet1", CidrBlock: "10.0.1.0/24"},
+			},
+			SecurityLists: []config.SecurityListConfig{
+				{
+					DisplayName: "public-ingress",
+					Protocol:    "6",
+					Description: "Allow HTTP/HTTPS/SSH access",
+					Source:      "0.0.0.0/0",
+					SubnetName:  "public-subnet",
+					Stateless:   false,
+					TCPOptions: []config.TCPOptionConfig{
+						{MinPort: 22, MaxPort: 22},
+						{MinPort: 80, MaxPort: 80},
+						{MinPort: 443, MaxPort: 443},
+					},
+				},
+				{
+					DisplayName: "public-egress",
+					Protocol:    "6",
+					Description: "Allow all outbound traffic",
+					Destination: "0.0.0.0/0",
+					SubnetName:  "public-subnet",
+					Stateless:   false,
+					TCPOptions:  []config.TCPOptionConfig{},
+				},
+				{
+					DisplayName: "private-ingress",
+					Protocol:    "6",
+					Description: "Allow SSH from bastion",
+					Source:      "10.0.1.0/24",
+					SubnetName:  "private-subnet",
+					Stateless:   false,
+					TCPOptions: []config.TCPOptionConfig{
+						{MinPort: 22, MaxPort: 22},
+					},
+				},
+			},
+		},
+	}
+
+	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+		secListMap, err := netCfg.CreateACLMap(ctx, "vcn-123")
+		if err != nil {
+			return err
+		}
+
+		if len(secListMap) != 3 {
+			t.Errorf("Expected 3 security lists in map, but got %d", len(secListMap))
+		}
+
+		// Verify that each security list exists in the map
+		expectedLists := []string{"public-ingress", "public-egress", "private-ingress"}
+		for _, name := range expectedLists {
+			if _, exists := secListMap[name]; !exists {
+				t.Errorf("Expected security list %s to be in map, but it was not found", name)
+			}
+		}
+
+		for name, sl := range secListMap {
+			if sl == nil {
+				t.Errorf("Security list %s is nil", name)
+			}
+		}
+
+		return nil
+	}, pulumi.WithMocks("project", "stack", SecurityListMocks(0)))
+
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+}

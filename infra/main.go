@@ -27,10 +27,24 @@ func main() {
 			log.Printf("Failed to create VCN with error: %v", err)
 			return err
 		}
-		_, err = ncfg.CreateACL(ctx, vcn.ID().ElementType().String())
+
+		// Create security lists and get a map for easy reference
+		securityLists, err := ncfg.CreateACLMap(ctx, vcn.ID().ElementType().String())
 		if err != nil {
-			log.Printf("Failed to create security lists failed with error: %v", err)
+			log.Printf("Failed to create security lists with error: %v", err)
 			return err
+		}
+
+		// Create subnets with their respective security lists attached based on subnet_name configuration
+		subnets, err := ncfg.CreateAllSubnetsWithSecurityLists(ctx, vcn.ID().ElementType().String(), securityLists)
+		if err != nil {
+			log.Printf("Failed to create subnets with security lists with error: %v", err)
+			return err
+		}
+
+		// Export subnet IDs for reference
+		for i, subnet := range subnets {
+			ctx.Export("subnet-"+string(rune(i)), subnet.ID())
 		}
 
 		ccfg := compute.ComputeCfg{ComputeConfig: cfg.Compute}
@@ -42,7 +56,6 @@ func main() {
 		for i, instance := range instances {
 			ctx.Export("instance-"+string(rune(i)), instance.ID())
 		}
-		//subnet, err := ncfg.CreateAllSubnets(ctx, vcn.ID().ElementType().String(), seclists)
 
 		myCompartment, err := identity.NewCompartment(ctx, "my-compartment", &identity.CompartmentArgs{
 			Name:         pulumi.String("my-compartment"),
