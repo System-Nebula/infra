@@ -1,6 +1,7 @@
 package main
 
 import (
+	"infra/compute"
 	"infra/config"
 	"infra/network"
 	"log"
@@ -30,6 +31,16 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to create security lists failed with error: %v", err)
 			return err
+		}
+
+		ccfg := compute.ComputeCfg{ComputeConfig: cfg.Compute}
+		instances, err := ccfg.CreateAllInstances(ctx)
+		if err != nil {
+			log.Printf("Failed to create compute instances with error: %v", err)
+			return err
+		}
+		for i, instance := range instances {
+			ctx.Export("instance-"+string(rune(i)), instance.ID())
 		}
 		//subnet, err := ncfg.CreateAllSubnets(ctx, vcn.ID().ElementType().String(), seclists)
 

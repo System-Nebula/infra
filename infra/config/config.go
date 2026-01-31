@@ -39,9 +39,20 @@ type NetworkConfig struct {
 	SecurityLists []SecurityListConfig `yaml:"security_lists"`
 }
 
+type InstanceConfig struct {
+	Name         string   `yaml:"name"`
+	DisplayName  string   `yaml:"display_name"`
+	Shape        string   `yaml:"shape"`
+	SubnetID     string   `yaml:"subnet_id"`
+	ImageOCID    string   `yaml:"image_ocid"`
+	SSHPublicKey string   `yaml:"ssh_public_key"`
+	OCPUCount    *float64 `yaml:"ocpu_count"`
+	MemoryGB     *float64 `yaml:"memory_gb"`
+}
+
 type ComputeConfig struct {
 	BaseConfig
-	InstanceShape string `yaml:"instance_shape"`
+	Instances []InstanceConfig `yaml:"instances"`
 }
 
 type BastionConfig struct {

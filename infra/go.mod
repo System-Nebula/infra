@@ -1,6 +1,6 @@
 module infra
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/pulumi/pulumi-oci/sdk v1.41.0
