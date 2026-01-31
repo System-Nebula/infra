@@ -54,7 +54,15 @@ network:
 
 compute:
   compartment_id: "ocid1.compartment.oc1..example"
-  instance_shape: "VM.Standard.E4.Flex"
+  instances:
+    - name: "dev-instance-1"
+      display_name: "Development Instance 1"
+      shape: "VM.Standard.E4.Flex"
+      subnet_id: "ocid1.subnet.oc1..example"
+      image_ocid: "ocid1.image.oc1..example"
+      ssh_public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC..."
+      ocpu_count: 2.0
+      memory_gb: 16.0
 
 bastion:
   compartment_id: "ocid1.compartment.oc1..example"
